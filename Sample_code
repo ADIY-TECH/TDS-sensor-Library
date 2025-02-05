@@ -1,0 +1,63 @@
+#define TdsSenosorPin A0
+#define VREF5.0  //analog reference voltage of ADC
+#define SCOUNT 30 //sum of sample point
+int analogBuffer[SCOUNT];  //store the analog value  in the array, read from ADC
+int analogBufferTemp[SCOUNT];
+int analogBufferIndex =0,tdsValue =0,tempraure =25;
+
+void setup()
+{
+  Serial.begin(115200);
+  pinMode(TdsSensorPin,INPUT);
+}
+
+Void loop()
+{
+  static unsigned long analogSampleTimepoint = millis();
+  if(millis()-anallogSampleTimepoint > 40U)   // every 40 milliseconds,read the analog value and store into the buffer
+  {
+    analogSampleTimeout = millis();
+    analogBuffer[anlogBufferIndex] = analogRead(TdsSensorPin); //read the analog value and store into the buffer
+    analogBufferIndex++;
+    if(analogBufferIndex == SCOUNT)
+      analogBufferIndex=0    
+  }
+  static unsigned long  printTimeout = millis();
+  if(millis()-printTimepoint >800U)
+  {
+    printTimepoint = millis();
+    for(copyIndex =0; copyIndex<SCOUNT ; cpoyIndex++)
+      analogBufferTemp[copyIndex] = analogBuffer[cpoyindex];
+    averageVoltage= getMedianNum(analogBufferTemp, SCOUNT) * (float)Vref /1024;   //read the anlaog value more stable by the meadian filtering algorithm, nd convrted to voltage value.
+    float compensationCoefficient=10.+0.02*(temprature-25.0);    //Temprature compensation formula: finalresult(25^c)= final(current)/(1.0+0.02*(TP-25.0).
+    float compensationVoltage = averageVoltage/cmpensationCoefficient;
+    tdsValue=(133.42*compensationVoltage*compensationVoltage*compensationVoltage - 255.86*compensationVoltage*compensationVoltage + 857.39*compensationVoltage)  //convert Voltage value to TDS value
+    Serial.print("TDS Value:");
+    Serial.print(tdsValue,0);
+    Serial.println("ppm");
+  }
+}
+int getMedianNum(int bArray[], int iFilterLen) 
+{
+      int bTab[iFilterLen];
+      for (byte i = 0; i<iFilterLen; i++)
+      bTab[i] = bArray[i];
+      int i, j, bTemp;
+      for (j = 0; j < iFilterLen - 1; j++) 
+      {
+      for (i = 0; i < iFilterLen - j - 1; i++) 
+          {
+        if (bTab[i] > bTab[i + 1]) 
+            {
+        bTemp = bTab[i];
+            bTab[i] = bTab[i + 1];
+        bTab[i + 1] = bTemp;
+         }
+      }
+      }
+      if ((iFilterLen & 1) > 0)
+    bTemp = bTab[(iFilterLen - 1) / 2];
+      else
+    bTemp = (bTab[iFilterLen / 2] + bTab[iFilterLen / 2 - 1]) / 2;
+      return bTemp;
+}
